@@ -34,7 +34,7 @@ func Init() error {
 		install = true
 	}
 
-	DB, err := sql.Open("sqlite", dbFile)
+	DB, err = sql.Open("sqlite", dbFile)
 	if err != nil {
 		return fmt.Errorf("ошибка открытия базы данных: %w", err)
 	}

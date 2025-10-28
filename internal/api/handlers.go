@@ -35,3 +35,10 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprint(w, next)
 }
+
+func taskHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		addTaskHandler(w, r)
+	}
+}
