@@ -15,9 +15,9 @@ func New(cfg settings.Config) *Server {
 	mux := NewRouter(cfg)
 
 	srv := &http.Server{
-		Addr: ":" + cfg.Port,
-		Handler: mux,
-		ReadTimeout: cfg.ReadTimeout *time.Second,
+		Addr:         ":" + cfg.Port,
+		Handler:      mux,
+		ReadTimeout:  cfg.ReadTimeout * time.Second,
 		WriteTimeout: cfg.WriteTimeout * time.Second,
 	}
 

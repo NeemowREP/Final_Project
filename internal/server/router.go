@@ -1,6 +1,7 @@
 package server
 
 import (
+	"Final_Project/internal/api"
 	"Final_Project/internal/settings"
 	"net/http"
 	"path/filepath"
@@ -18,6 +19,8 @@ func NewRouter(cfg settings.Config) *http.ServeMux {
 		}
 		fs.ServeHTTP(w, r)
 	})
+
+	api.Init(mux)
 
 	return mux
 }
