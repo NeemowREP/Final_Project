@@ -1,12 +1,15 @@
 package api
 
 import (
-	"Final_Project/internal/db"
 	"net/http"
+
+	"Final_Project/internal/db"
 )
 
+const limit = 50
+
 type TasksResp struct {
-    Tasks []*db.Task `json:"tasks"`
+	Tasks []*db.Task `json:"tasks"`
 }
 
 func TasksHandler(w http.ResponseWriter, r *http.Request) {
@@ -23,13 +26,13 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if search == "" {
-		tasks, err = db.Tasks(50)
+		tasks, err = db.Tasks(limit)
 	} else {
 		tasks, err = db.TasksSearch(search, 50)
 	}
 
 	if err != nil {
-		writeError(w, err)
+		writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -41,4 +44,3 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 		Tasks: tasks,
 	})
 }
-

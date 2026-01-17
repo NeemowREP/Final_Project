@@ -18,7 +18,8 @@ WORKDIR /app
 COPY --from=builder /app/todo_server .
 COPY web ./web
 
-EXPOSE 7540
+# Порт намеренно не фиксируется.
+# Приложение слушает порт из TODO_PORT.
 
 CMD ["./todo_server"]
 

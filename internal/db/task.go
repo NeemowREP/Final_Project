@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const dateformat = "20060102"
+
 type Task struct {
 	ID      string `json:"id"`
 	Date    string `json:"date"`
@@ -84,10 +86,9 @@ func scanTasks(rows *sql.Rows) ([]*Task, error) {
 	return tasks, nil
 }
 
-
 func TasksSearch(search string, limit int) ([]*Task, error) {
 	if t, err := time.Parse("02.01.2006", search); err == nil {
-		date := t.Format("20060102")
+		date := t.Format(dateformat)
 
 		rows, err := DB.Query(`
 			SELECT id, date, title, comment, repeat
@@ -195,4 +196,3 @@ func UpdateDate(next string, id string) error {
 
 	return nil
 }
-

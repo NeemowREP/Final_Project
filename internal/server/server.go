@@ -1,9 +1,11 @@
 package server
 
 import (
-	"Final_Project/internal/settings"
+	"log"
 	"net/http"
 	"time"
+
+	"Final_Project/internal/settings"
 )
 
 type Server struct {
@@ -22,9 +24,9 @@ func New(cfg settings.Config) *Server {
 	}
 
 	return &Server{httpServer: srv, cfg: cfg}
-
 }
 
 func (s *Server) Run() error {
+	log.Printf("Server is running on port %s", s.cfg.Port)
 	return s.httpServer.ListenAndServe()
 }

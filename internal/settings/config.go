@@ -11,11 +11,12 @@ import (
 )
 
 type Config struct {
-	Port         string        `envconfig:"TODO_PORT" default:"7540"`
-	LogLevel     string        `envconfig:"LOG_LEVEL" default:"info"`
-	ReadTimeout  time.Duration `envconfig:"READ_TIMEOUT" default:"5s"`
-	WriteTimeout time.Duration `envconfig:"WRITE_TIMEOUT" default:"10s"`
-	WebDir       string        `envconfig:"WEB_DIR" default:"../../web"`
+	Port          string        `envconfig:"TODO_PORT" default:"7540"`
+	LogLevel      string        `envconfig:"LOG_LEVEL" default:"info"`
+	ReadTimeout   time.Duration `envconfig:"READ_TIMEOUT" default:"5s"`
+	WriteTimeout  time.Duration `envconfig:"WRITE_TIMEOUT" default:"10s"`
+	WebDir        string        `envconfig:"WEB_DIR" default:"web"`
+	TODO_PASSWORD string        `envconfig:"TODO_PASSWORD" default:"12345"`
 }
 
 func Load() Config {

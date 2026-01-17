@@ -1,18 +1,24 @@
 package api
 
 import (
-	"Final_Project/internal/db"
-	"Final_Project/internal/service"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
+
+	"Final_Project/internal/db"
+	"Final_Project/internal/service"
 )
 
 func NextDayHandler(w http.ResponseWriter, r *http.Request) {
 	nowStr := r.FormValue("now")
 	dstart := r.FormValue("date")
 	repeat := r.FormValue("repeat")
+
+	if dstart == "" {
+		writeError(w, fmt.Errorf("date not specified"), http.StatusBadRequest)
+		return
+	}
 
 	var now time.Time
 	var err error
@@ -21,7 +27,7 @@ func NextDayHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		now, err = time.Parse(DateFormat, nowStr)
 		if err != nil {
-			http.Error(w, "неверный формат now", 400)
+			writeError(w, fmt.Errorf("invalid now format"), http.StatusBadRequest)
 			return
 		}
 	}
@@ -30,10 +36,13 @@ func NextDayHandler(w http.ResponseWriter, r *http.Request) {
 
 	next, err := service.NextDate(now, dstart, repeat)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		writeError(w, err, http.StatusBadRequest)
 		return
 	}
-	fmt.Fprint(w, next)
+
+	 w.Header().Set("Content-Type", "text/plain")
+    w.WriteHeader(http.StatusOK)
+    _, _ = w.Write([]byte(next))
 }
 
 func checkDate(task *db.Task) error {
@@ -47,7 +56,7 @@ func checkDate(task *db.Task) error {
 
 	t, err := time.Parse(DateFormat, task.Date)
 	if err != nil {
-		return fmt.Errorf("uncorrect date")
+		return fmt.Errorf("invalid date")
 	}
 
 	if task.Repeat != "" {
@@ -78,83 +87,81 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
-		writeError(w, fmt.Errorf("json deserialization error"))
+		writeError(w, fmt.Errorf("json deserialization error"), http.StatusBadRequest)
 		return
 	}
 
 	if task.Title == "" {
-		writeError(w, fmt.Errorf("task title not specified"))
+		writeError(w, fmt.Errorf("task title not specified"), http.StatusBadRequest)
 		return
 	}
 
 	err = checkDate(&task)
 	if err != nil {
-		writeError(w, err)
+		writeError(w, err, http.StatusBadRequest)
 		return
 	}
 
 	id, err := db.AddTask(&task)
 	if err != nil {
-		writeError(w, err)
+		writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	writeJSON(w, map[string]string{"id": fmt.Sprintf("%d", id)})
 }
 
-
 func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		writeError(w, fmt.Errorf("id not specified"))
+		writeError(w, fmt.Errorf("id not specified"), http.StatusBadRequest)
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeError(w, fmt.Errorf("task not found"))
+		writeError(w, fmt.Errorf("task not found"), http.StatusNotFound)
 		return
 	}
 
 	writeJSON(w, task)
 }
 
-
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var t db.Task
 	err := json.NewDecoder(r.Body).Decode(&t)
 	if err != nil {
-		writeError(w, fmt.Errorf("invalid json format"))
+		writeError(w, fmt.Errorf("invalid json format"), http.StatusBadRequest)
 		return
 	}
 
 	if t.ID == "" {
-		writeError(w, fmt.Errorf("id not specified"))
+		writeError(w, fmt.Errorf("id not specified"), http.StatusBadRequest)
 		return
 	}
 
 	if t.Title == "" {
-		writeError(w, fmt.Errorf("title not specified"))
+		writeError(w, fmt.Errorf("title not specified"), http.StatusBadRequest)
 		return
 	}
 
 	if t.Date != "" {
-		if _, err := time.Parse("20060102", t.Date); err != nil {
-			writeError(w, fmt.Errorf("invalid date format"))
+		if _, err := time.Parse(DateFormat, t.Date); err != nil {
+			writeError(w, fmt.Errorf("invalid date format"), http.StatusBadRequest)
 			return
 		}
 	}
 
 	if t.Repeat != "" {
 		if !isValidRepeat(t.Repeat) {
-			writeError(w, fmt.Errorf("invalid repeat format"))
+			writeError(w, fmt.Errorf("invalid repeat format"), http.StatusBadRequest)
 			return
 		}
 	}
 
 	err = db.UpdateTask(&t)
 	if err != nil {
-		writeError(w, err)
+		writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -187,33 +194,33 @@ func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		writeError(w, fmt.Errorf("id not specified"))
+		writeError(w, fmt.Errorf("id not specified"), http.StatusBadRequest)
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeError(w, fmt.Errorf("task not found"))
+		writeError(w, fmt.Errorf("task not found"), http.StatusNotFound)
 		return
 	}
 
 	if task.Repeat == "" {
 		err = db.DeleteTask(id)
 		if err != nil {
-			writeError(w, err)
+			writeError(w, err, http.StatusInternalServerError)
 			return
 		}
 	} else {
-		now, _ := time.Parse("20060102", task.Date)
+		now, _ := time.Parse(DateFormat, task.Date)
 		next, err := service.NextDate(now, task.Date, task.Repeat)
 		if err != nil {
-			writeError(w, err)
+			writeError(w, err, http.StatusBadRequest)
 			return
 		}
 
 		err = db.UpdateDate(next, id)
 		if err != nil {
-			writeError(w, err)
+			writeError(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -224,18 +231,15 @@ func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		writeError(w, fmt.Errorf("id not specified"))
+		writeError(w, fmt.Errorf("id not specified"), http.StatusBadRequest)
 		return
 	}
 
 	err := db.DeleteTask(id)
 	if err != nil {
-		writeError(w, err)
+		writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	writeJSON(w, map[string]string{})
 }
-
-
-

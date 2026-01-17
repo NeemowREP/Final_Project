@@ -50,6 +50,10 @@ curl -X POST -H "Content-Type: application/json" \
 1. Получите токен через /api/signin и вставьте его в tests/settings.go:
 var Token = "тут_вставить_значение_токена"
 
+Важно: токен JWT генерируется при каждом запуске сервера. 
+> Перед запуском тестов убедитесь, что переменная `Token` в `tests/settings.go` содержит актуальный токен. 
+> Если сервер перезапущен — получите токен заново через /api/signin.
+
 2. Запустите тесты:
 
 go test ./tests
@@ -62,9 +66,9 @@ docker build -t todo_app .
 
 2. Запуск контейнера с пробросом порта и подключением базы данных:
 
-docker run -it --rm -p 7540:7540 -v $(pwd)/scheduler.db:/app/scheduler.db \
-  -e TODO_PASSWORD=12345 \
-  todo_app
+docker run --env-file .env -p 7540:7540 todo_app
+
+Обратите внимание: значение TODO_PORT в .env должно совпадать с локальным портом, который вы пробрасываете через -p.
 
 3. Перейдите в браузере по адресу:
 

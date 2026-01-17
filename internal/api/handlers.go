@@ -6,8 +6,6 @@ import (
 
 const DateFormat = "20060102"
 
-
-
 func TaskHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
@@ -22,5 +20,3 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
-
-
